@@ -39,6 +39,7 @@ class GetPageUrls extends Base
 
         $this->segmentSql = 'log_visit.visit_entry_idaction_url';
 
+        $this->subCategory = 'General_Pages';
         $this->menuTitle   = 'General_Pages';
         $this->widgetTitle = 'General_Pages';
     }

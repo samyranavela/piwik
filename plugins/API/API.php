@@ -23,6 +23,7 @@ use Piwik\Period;
 use Piwik\Period\Range;
 use Piwik\Piwik;
 use Piwik\Plugin\Dimension\VisitDimension;
+use Piwik\Plugin\Report;
 use Piwik\Plugins\API\DataTable\MergeDataTables;
 use Piwik\Plugins\CoreAdminHome\CustomLogo;
 use Piwik\Segment\SegmentExpression;
@@ -361,6 +362,113 @@ class API extends \Piwik\Plugin\API
             $apiParameters, $idGoal, $language, $showTimer, $hideMetricsDoc, $idSubtable, $showRawMetrics);
 
         return $processed;
+    }
+
+    public function getReportCategories()
+    {
+        // this logic already allows any plugin to overwrite any core category and any core subcategory
+
+        $categories    = Report\Category::getAllCategories();
+        $subcategories = Report\SubCategory::getAllSubCategories();
+
+        /** @var Report\Category[] $all */
+        $all = array();
+        foreach ($categories as $category) {
+            $all[$category->getName()] = $category;
+        }
+
+        // move subcategories into categories
+        foreach ($subcategories as $subcategory) {
+            $category = $subcategory->getCategory();
+            if (!$category) {
+                return;
+            }
+            if (!isset($all[$category])) {
+                $all[$category] = new Report\Category();
+                $all[$category]->setName($category);
+            }
+
+            $all[$category]->addSubCategory($subcategory);
+        }
+
+        // move reports into categories/subcategories and create missing ones if needed
+        $reports = Report::getAllReports();
+        foreach ($reports as $report) {
+            $category = $report->getCategory();
+            $subcategory = $report->getSubCategory();
+
+            if (!$category || !$subcategory) {
+                continue;
+            }
+
+            if (!isset($all[$category])) {
+                $all[$category] = new Report\Category();
+                $all[$category]->setName($category);
+            }
+
+            if (!$all[$category]->hasSubCategory($subcategory)) {
+                $subcat = new Report\SubCategory();
+                $subcat->setName($subcategory);
+                $all[$category]->addSubCategory($subcat);
+            }
+
+            $all[$category]->getSubCategory($subcategory)->addReport($report);
+        }
+
+        // todo should we maybe iterate over all widgets as well to move optionally widgets to pages?
+
+        // POST EVENT to be able to change it and to handle report dimensions?!?
+
+        // format output, todo they need to be sorted by order!
+        $entry = array();
+        foreach ($categories as $category) {
+            // todo they need to be sorted by order!
+            foreach ($category->getSubCategories() as $subcategory) {
+
+                $cat = array(
+                    'category'    => $category->getName(),
+                    'subcategory' => $subcategory->getName(),
+                    'evolution'   => null,
+                    'sparklines'  => $subcategory->getSparklines() ?: null,
+                    'items'       => array(),
+                );
+
+                $evolution = $subcategory->getEvolution();
+
+                if (isset($evolution) && is_array($evolution)) {
+                    $cat['evolution'] = $subcategory->getEvolution();
+                } elseif (isset($evolution) && $evolution instanceof Report) {
+                    $cat['evolution'] = array(
+                        'type' => 'report',
+                        'name' => $evolution->getName(),
+                        'module' => $evolution->getModule(),
+                        'action' => $evolution->getAction(),
+                        'html_url' => '',
+                        'widget_url' => ''
+                    );
+                }
+
+                // todo they need to be sorted by order!
+                foreach ($subcategory->getReports() as $report) {
+                    if (!is_array($report)) {
+                        $report = array(
+                            'type' => 'report',
+                            'name' => $report->getName(),
+                            'module' => $report->getModule(),
+                            'action' => $report->getAction(),
+                            'html_url' => '',
+                            'widget_url' => ''
+                        );
+                    }
+
+                    $cat['items'][] = $report;
+                }
+
+                $entry[] = $cat;
+            }
+        }
+
+        return $entry;
     }
 
     /**

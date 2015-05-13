@@ -20,6 +20,8 @@ use Piwik\Metrics;
 use Piwik\Cache as PiwikCache;
 use Piwik\Piwik;
 use Piwik\Plugin\Manager as PluginManager;
+use Piwik\Plugin\Report\Category;
+use Piwik\Plugin\Report\SubCategory;
 use Piwik\Plugins\CoreVisualizations\Visualizations\HtmlTable;
 use Piwik\WidgetsList;
 use Piwik\ViewDataTable\Factory as ViewDataTableFactory;
@@ -83,6 +85,13 @@ class Report
      * @api
      */
     protected $category;
+
+    /**
+     * The translation key of the subcategory the report belongs to.
+     * @var string
+     * @api
+     */
+    protected $subCategory;
 
     /**
      * The translation key of the widget title. If a widget title is set, the platform will automatically configure/add
@@ -238,6 +247,10 @@ class Report
         }
 
         $this->init();
+
+        if ($this->menuTitle) {
+            $this->subCategory = $this->menuTitle;
+        }
     }
 
     /**
@@ -676,7 +689,25 @@ class Report
      */
     public function getCategory()
     {
+        if (isset($this->category) && $this->category instanceof Category) {
+            return $this->category->getName();
+        }
+
         return Piwik::translate($this->category);
+    }
+
+    /**
+     * Get the translated name of the subcategory the report belongs to.
+     * @return string
+     * @ignore
+     */
+    public function getSubCategory()
+    {
+        if (isset($this->subCategory) && $this->subCategory instanceof SubCategory) {
+            return $this->subCategory->getName();
+        }
+
+        return Piwik::translate($this->subCategory);
     }
 
     /**
