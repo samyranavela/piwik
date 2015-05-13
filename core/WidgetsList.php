@@ -10,6 +10,8 @@ namespace Piwik;
 
 use Piwik\Cache as PiwikCache;
 use Piwik\Plugin\Report;
+use Piwik\Plugin\Widget;
+use Piwik\Plugin\WidgetConfig;
 use Piwik\Plugin\Widgets;
 
 /**
@@ -76,6 +78,8 @@ class WidgetsList extends Singleton
 
         $widgets = array();
         foreach (self::$widgets as $key => $v) {
+            usort($v, array('Piwik\WidgetsList', '_sortWidgetsByOrder'));
+
             $category = Piwik::translate($key);
 
             if (isset($widgets[$category])) {
@@ -112,16 +116,54 @@ class WidgetsList extends Singleton
 
             $widgetContainers = Widgets::getAllWidgets();
             foreach ($widgetContainers as $widgetContainer) {
-                $widgets = $widgetContainer->getWidgets();
+                foreach ($widgetContainer->getWidgets() as $widget) {
+                    $widgetsList->addWidget($widget);
+                }
+            }
 
-                foreach ($widgets as $widget) {
-                    $widgetsList->add($widget['category'], $widget['name'], $widget['module'], $widget['method'], $widget['params']);
+            $widgetConfigs = Widget::getAllWidgetConfigurations();
+            foreach ($widgetConfigs as $widget) {
+                if ($widget->isEnabled()) {
+                    $widgetsList->addWidget($widget);
                 }
             }
 
             foreach ($widgetContainers as $widgetContainer) {
                 $widgetContainer->configureWidgetsList($widgetsList);
             }
+
+            foreach (Widget::getAllWidgetClassNames() as $widgetClass) {
+                $widgetClass::configureWidgetsList($widgetsList);
+            }
+        }
+    }
+
+    public function addWidget(WidgetConfig $widget)
+    {
+        $this->checkIsValidWidget($widget);
+
+        $this->add(
+            $widget->getCategory(), $widget->getName(), $widget->getModule(),
+            $widget->getAction(), $widget->getParameters(), $widget->getOrder()
+        );
+    }
+
+    private function checkIsValidWidget(WidgetConfig $widget)
+    {
+        if (!Development::isEnabled()) {
+            return;
+        }
+
+        if (!$widget->getName()) {
+            Development::error('No name is defined for added widget having method "' . $widget->getAction());
+        }
+
+        if (!$widget->getModule()) {
+            Development::error('No module is defined for added widget having name "' . $widget->getName());
+        }
+
+        if (!$widget->getAction()) {
+            Development::error('No action is defined for added widget having name "' . $widget->getName());
         }
     }
 
@@ -161,6 +203,22 @@ class WidgetsList extends Singleton
     }
 
     /**
+     * Sorting method for widgets
+     *
+     * @param array $a
+     * @param array $b
+     * @return int
+     */
+    protected static function _sortWidgetsByOrder($a, $b)
+    {
+        if ($a['order'] == $b['order']) {
+            return 0;
+        }
+
+        return $a['order'] < $b['order'] ? -1 : 1;
+    }
+
+    /**
      * Returns the unique id of an widget with the given parameters
      *
      * @param $controllerName
@@ -193,8 +251,10 @@ class WidgetsList extends Singleton
      * @param string $controllerAction The report's controller action method name.
      * @param array $customParameters Extra query parameters that should be sent while getting
      *                                this report.
+     * @param int $order The order hint.
+     * @deprecated since Piwik 2.15, use `addWidget()` instead.
      */
-    public static function add($widgetCategory, $widgetName, $controllerName, $controllerAction, $customParameters = array())
+    public static function add($widgetCategory, $widgetName, $controllerName, $controllerAction, $customParameters = array(), $order = 99)
     {
         $widgetName     = Piwik::translate($widgetName);
         $widgetUniqueId = self::getWidgetUniqueId($controllerName, $controllerAction, $customParameters);
@@ -207,6 +267,7 @@ class WidgetsList extends Singleton
         self::$widgets[$widgetCategory][] = array(
             'name'       => $widgetName,
             'uniqueId'   => $widgetUniqueId,
+            'order'      => $order,
             'parameters' => array('module' => $controllerName,
                                   'action' => $controllerAction
                 ) + $customParameters

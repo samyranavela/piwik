@@ -41,7 +41,7 @@ class GetPageUrls extends Base
 
         $this->subCategory = 'General_Pages';
         $this->menuTitle   = 'General_Pages';
-        $this->widgetTitle = 'General_Pages';
+        $this->createWidget()->setName($this->menuTitle);
     }
 
     public function getMetrics()

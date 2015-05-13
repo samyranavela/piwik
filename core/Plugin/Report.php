@@ -98,6 +98,7 @@ class Report
      * a widget for this report. Alternatively, this behavior can be overwritten in {@link configureWidget()}.
      * @var string
      * @api
+     * @deprecated since Piwik 2.15, use `createWidget()` instead
      */
     protected $widgetTitle;
 
@@ -105,6 +106,7 @@ class Report
      * Optional widget params that will be appended to the widget URL if a {@link $widgetTitle} is set.
      * @var array
      * @api
+     * @deprecated since Piwik 2.15, use `createWidget()` instead
      */
     protected $widgetParams = array();
 
@@ -211,6 +213,11 @@ class Report
      * @var bool
      */
     protected $defaultSortOrderDesc = true;
+
+    /**
+     * @var null|WidgetConfig
+     */
+    private $widget = null;
 
     /**
      * @var array
@@ -354,21 +361,69 @@ class Report
         return $rendered;
     }
 
+    protected function createWidget()
+    {
+        $widget = new WidgetConfig();
+        $widget->setOrder(9989); // this allows to detect whether the report set a custom module/action/order
+        // todo if we actually go with that code later we need to make a constant for 9989
+
+        // createWidget() should only create a widget and not set it, but keep it for now for simplicity
+        $this->widget = $widget;
+
+        return $widget;
+    }
+
     /**
      * By default a widget will be configured for this report if a {@link $widgetTitle} is set. If you want to customize
      * the way the widget is added or modify any other behavior you can overwrite this method.
      * @param WidgetsList $widget
      * @api
+     * @deprecated since Piwik 2.15, use `createWidget()` instead
+     * FYI: We will most likely keep this method but we will remove @api
+     * @internal
      */
     public function configureWidget(WidgetsList $widget)
     {
-        if ($this->widgetTitle) {
-            $params = array();
+        if (!$this->widget && $this->widgetTitle) {
+            // for BC
+            $createdWidget = $this->createWidget();
+            $createdWidget->setName($this->widgetTitle);
             if (!empty($this->widgetParams) && is_array($this->widgetParams)) {
-                $params = $this->widgetParams;
+                $createdWidget->setParameters($this->widgetParams);
             }
-            $widget->add($this->category, $this->widgetTitle, $this->module, $this->action, $params);
         }
+
+        if (!$this->widget) {
+            return;
+        }
+
+        if (!$this->isEnabled()) {
+            // todo I just notice we did not respect $this->isEnabled() before. Maybe it was on purpose?
+            return;
+        }
+
+        if (!$this->widget->getCategory()) {
+            $this->widget->setCategory($this->category);
+        }
+
+        if (!$this->widget->getName()) {
+            $this->widget->setName($this->name);
+        }
+
+        if (!$this->widget->getModule()) {
+            $this->widget->setModule($this->module);
+        }
+
+        if (!$this->widget->getAction()) {
+            $this->widget->setAction($this->action);
+        }
+
+        if (9989 === $this->widget->getOrder()) {
+            $orderThatListsReportsAtTheEndOfEachCategory = 100 + $this->order;
+            $this->widget->setOrder($orderThatListsReportsAtTheEndOfEachCategory);
+        }
+
+        $widget->addWidget($this->widget);
     }
 
     /**
@@ -647,6 +702,10 @@ class Report
      */
     public function getWidgetTitle()
     {
+        if ($this->widget) {
+            return Piwik::translate($this->widget->getName());
+        }
+
         if ($this->widgetTitle) {
             return Piwik::translate($this->widgetTitle);
         }

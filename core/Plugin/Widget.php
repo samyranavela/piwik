@@ -8,81 +8,104 @@
  */
 namespace Piwik\Plugin;
 
-use Piwik\Development;
+use Piwik\Container\StaticContainer;
 use Piwik\Plugin\Manager as PluginManager;
 use Piwik\WidgetsList;
+use Exception;
 
 /**
- * Base class of all plugin widget providers. Plugins that define their own widgets can extend this class to easily
- * add new widgets or to remove widgets defined by other plugins.
+ * Defines a new widget. You can create a new widget using the console command `./console generate:widget`.
+ * The generated widget will guide you through the creation of a widget.
  *
- * For an example, see the {@link https://github.com/piwik/piwik/blob/master/plugins/ExamplePlugin/Widgets.php} plugin.
+ * For an example, see {@link https://github.com/piwik/piwik/blob/master/plugins/ExamplePlugin/Widgets/MyExampleWidget.php}
  *
- * @api
+ * @api since Piwik 2.15
  */
 class Widget
 {
-    protected $category = '';
-    protected $module = '';
-    protected $action = '';
-
     /**
-     * @ignore
+     * @param WidgetConfig $config
+     * @api
      */
-    public function getCategory()
+    public static function configure(WidgetConfig $config)
     {
-        return $this->category;
-    }
-
-    public function getModule()
-    {
-        if (empty($this->module)) {
-            $parts = $this->getClassNameParts();
-
-            $this->module = $parts[2];
-        }
-
-        return $this->module;
-    }
-
-    public function getAction()
-    {
-        if (empty($this->action)) {
-            $parts = $this->getClassNameParts();
-
-            if (count($parts) >= 4) {
-                $this->action = lcfirst(end($parts));
-            }
-        }
-
-        return $this->action;
-    }
-
-    private function getClassNameParts()
-    {
-        $classname = get_class($this);
-        return explode('\\', $classname);
     }
 
     /**
-     * @return \Piwik\Plugin\Widget[]
-     * @ignore
+     * @return string
      */
-    public static function getAllWidgets()
+    public function render()
     {
-        $widgetClasses = PluginManager::getInstance()->findMultipleComponents('Widgets', 'Piwik\\Plugin\\Widget');
+        return '';
+    }
 
-        $widgets = array();
+    /**
+     * Allows you to configure previously added widgets.
+     * For instance you can remove any widgets defined by any plugin by calling the
+     * {@link \Piwik\WidgetsList::remove()} method.
+     *
+     * @param WidgetsList $widgetsList
+     * @api
+     */
+    public static function configureWidgetsList(WidgetsList $widgetsList)
+    {
+    }
+
+    /**
+     * @return \Piwik\Plugin\WidgetConfig[]
+     */
+    public static function getAllWidgetConfigurations()
+    {
+        $widgetClasses = self::getAllWidgetClassNames();
+
+        $configs = array();
         foreach ($widgetClasses as $widgetClass) {
-            $widgets[] = new $widgetClass();
+            $configs[] = self::getWidgetConfigForClassName($widgetClass);
         }
 
-        return $widgets;
+        return $configs;
+    }
+
+    private static function getWidgetConfigForClassName($widgetClass)
+    {
+        /** @var string|Widget $widgetClass */
+        $config = new WidgetConfig();
+        $config->setModule(self::getModuleFromWidgetClassName($widgetClass));
+        $config->setAction(self::getActionFromWidgetClassName($widgetClass));
+        $widgetClass::configure($config);
+
+        return $config;
     }
 
     /**
-     * @ignore
+     * @return string[]
+     */
+    public static function getAllWidgetClassNames()
+    {
+        return PluginManager::getInstance()->findMultipleComponents('Widgets', 'Piwik\\Plugin\\Widget');
+    }
+
+    private static function getModuleFromWidgetClassName($widgetClass)
+    {
+        $parts = explode('\\', $widgetClass);
+
+        return $parts[2];
+    }
+
+    private static function getActionFromWidgetClassName($widgetClass)
+    {
+        $parts = explode('\\', $widgetClass);
+
+        if (count($parts) >= 4) {
+            return lcfirst(end($parts));
+        }
+
+        return '';
+    }
+
+    /**
      * @return Widgets|null
+     * @throws \Exception
      */
     public static function factory($module, $action)
     {
@@ -103,18 +126,14 @@ class Widget
             return;
         }
 
-        // the widget class implements such an action, but we have to check whether it is actually exposed and whether
-        // it was maybe disabled by another plugin, this is only possible by checking the widgetslist, unfortunately
-        if (!WidgetsList::isDefined($module, $action)) {
-            return;
-        }
-
         /** @var Widget[] $widgetContainer */
         $widgets = $plugin->findMultipleComponents('Widgets', 'Piwik\\Plugin\\Widget');
 
-        foreach ($widgets as $widget) {
-            if ($widget->getAction() == $action) {
-                return $widget;
+        foreach ($widgets as $widgetClass) {
+            $config = self::getWidgetConfigForClassName($widgetClass);
+            if ($config->getAction() === $action) {
+                $config->checkIsEnabled(); // todo how can we handle this better?!? only isEnabled? or setEnabled on widget?
+                return StaticContainer::get($widgetClass);
             }
         }
     }
