@@ -49,7 +49,7 @@ describe("Dashboard", function () {
         var layout = [
             [
                 {
-                    uniqueId: "widgetVisitsSummarygetEvolutionGraphcolumnsArray",
+                    uniqueId: "widgetVisitsSummarygetEvolutionGraphmoduleVisitsSummaryactiongetEvolutionGraphforceView1viewDataTablegraphEvolutioncolumnsArray",
                     parameters: {module: "VisitsSummary", action: "getEvolutionGraph", columns: "nb_visits"}
                 }
             ],
@@ -126,7 +126,7 @@ describe("Dashboard", function () {
             page.click('.dashboard-manager');
 
             page.mouseMove('.widgetpreview-categorylist>li:contains(Live!)'); // have to mouse move twice... otherwise Live! will just be highlighted
-            page.mouseMove('.widgetpreview-categorylist>li:contains(Visits Summary)');
+            page.mouseMove('.widgetpreview-categorylist>li:contains(Visitors)');
 
             page.mouseMove('.widgetpreview-widgetlist>li:contains(Visits by Local Time)');
 
@@ -136,8 +136,10 @@ describe("Dashboard", function () {
 
     it("should remove widget when remove widget icon is clicked", function (done) {
         expect.screenshot("widget_move").to.be.capture("widget_removed", function (page) {
-            page.mouseMove('#widgetVisitTimegetVisitInformationPerLocalTime .widgetTop');
-            page.click('#widgetVisitTimegetVisitInformationPerLocalTime .button#close');
+            var widget = '[id="widgetVisitTimegetVisitInformationPerLocalTimemoduleVisitTimeactiongetVisitInformationPerLocalTimeforceView0viewDataTablegraphVerticalBar"]';
+
+            page.mouseMove(widget + ' .widgetTop');
+            page.click(widget + ' .button#close');
             page.click('.ui-dialog button>span:contains(Yes)');
             page.mouseMove('.dashboard-manager');
         }, done);
@@ -168,11 +170,11 @@ describe("Dashboard", function () {
             page.click('.dashboard-manager');
             page.click('li[data-action=copyDashboardToUser]');
             page.evaluate(function () {
-                $('#copyDashboardName').val('');
+                $('[id=copyDashboardName]:last').val('');
             });
-            page.sendKeys('#copyDashboardName', 'newdash');
+            page.sendKeys('[id=copyDashboardName]:last', 'newdash');
             page.evaluate(function () {
-                $('#copyDashboardUser').val('superUserLogin');
+                $('[id=copyDashboardUser]:last').val('superUserLogin');
             });
             page.click('.ui-dialog button>span:contains(Ok)');
 

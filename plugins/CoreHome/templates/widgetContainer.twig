@@ -1,0 +1,9 @@
+<div>
+    {% for widget in widgets %}
+        {% if widget.name %}
+            <h2>{{ widget.name|translate }}</h2>
+        {% endif %}
+
+        {{ widget.content|raw }}
+    {% endfor %}
+</div>

@@ -13,6 +13,8 @@ use Piwik\Piwik;
 use Piwik\Plugin\Report;
 use Piwik\Plugin\ViewDataTable;
 use Piwik\Plugins\Provider\Columns\Provider;
+use Piwik\Report\ReportWidgetFactory;
+use Piwik\Widget\WidgetsList;
 
 class GetProvider extends Report
 {
@@ -23,7 +25,14 @@ class GetProvider extends Report
         $this->name          = Piwik::translate('Provider_ColumnProvider');
         $this->documentation = Piwik::translate('Provider_ProviderReportDocumentation', '<br />');
         $this->order = 50;
-        $this->widgetTitle  = 'Provider_WidgetProviders';
+
+        $this->subCategory = 'UserCountry_SubmenuLocations';
+    }
+
+    public function configureWidgets(WidgetsList $widgetsList, ReportWidgetFactory $factory)
+    {
+        $widget = $factory->createWidget()->setName('Provider_WidgetProviders');
+        $widgetsList->addWidget($widget);
     }
 
     public function configureView(ViewDataTable $view)

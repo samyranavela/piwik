@@ -17,6 +17,8 @@ use Piwik\Plugins\Actions\Columns\Metrics\AveragePageGenerationTime;
 use Piwik\Plugins\Actions\Columns\Metrics\AverageTimeOnPage;
 use Piwik\Plugins\Actions\Columns\Metrics\BounceRate;
 use Piwik\Plugins\Actions\Columns\Metrics\ExitRate;
+use Piwik\Report\ReportWidgetFactory;
+use Piwik\Widget\WidgetsList;
 
 class GetExitPageUrls extends Base
 {
@@ -40,8 +42,12 @@ class GetExitPageUrls extends Base
 
         $this->order = 4;
 
-        $this->menuTitle   = 'Actions_SubmenuPagesExit';
-        $this->widgetTitle = 'Actions_WidgetPagesExit';
+        $this->subCategory = 'Actions_SubmenuPagesExit';
+    }
+
+    public function configureWidgets(WidgetsList $widgetsList, ReportWidgetFactory $factory)
+    {
+        $widgetsList->addWidget($factory->createWidget()->setName('Actions_WidgetPagesExit'));
     }
 
     public function getProcessedMetrics()

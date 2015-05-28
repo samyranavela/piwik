@@ -15,7 +15,7 @@ abstract class Base extends \Piwik\Plugin\Report
 {
     protected function init()
     {
-        $this->category = 'VisitsSummary_VisitsSummary';
+        $this->category = 'General_Visitors';
     }
 
     public function getDefaultTypeViewDataTable()

@@ -1,0 +1,16 @@
+<div>
+    <h2 ng-if="widget.name"
+        piwik-enriched-headline
+        feature-name="{{widget.name}}" ng-bind-html="widget.name"></h2>
+
+    <div ng-if="!widget.isContainer && widget.widget_url"
+         piwik-widget-loader="widget.widget_url"></div>
+
+    <div ng-if="widget.isContainer && widget.layout!='ByDimension'">
+        <div piwik-widget-container container="widget"></div>
+    </div>
+
+    <div ng-if="widget.isContainer && widget.layout=='ByDimension'">
+        <div piwik-widget-by-dimension-container container="widget"></div>
+    </div>
+</div>

@@ -159,7 +159,6 @@ var broadcast = {
         } else {
             // start page
             Piwik_Popover.close();
-
             $('.pageWrap #content:not(.admin)').empty();
         }
     },
@@ -197,9 +196,11 @@ var broadcast = {
 
         ajaxUrl = ajaxUrl.replace(/^\?|&#/, '');
 
+        var $location = angular.element(document).injector().get('$location');
+
         var params_vals = ajaxUrl.split("&");
         for (var i = 0; i < params_vals.length; i++) {
-            currentHashStr = broadcast.updateParamValue(params_vals[i], currentHashStr);
+            $location.search(i, params_vals[i]);
         }
 
         // if the module is not 'Goals', we specifically unset the 'idGoal' parameter
@@ -349,9 +350,9 @@ var broadcast = {
      */
     propagateNewPopoverParameter: function (handlerName, value) {
         // init broadcast if not already done (it is required to make popovers work in widgetize mode)
-        broadcast.init(true);
+        //broadcast.init(true);
 
-        var hash = broadcast.getHashFromUrl(window.location.href);
+        var $location = angular.element(document).injector().get('$location');
 
         var popover = '';
         if (handlerName) {
@@ -365,24 +366,14 @@ var broadcast = {
         }
 
         if ('' == value || 'undefined' == typeof value) {
-            var newHash = hash.replace(/(&?popover=.*)/, '');
-        } else if (broadcast.getParamValue('popover', hash)) {
-            var newHash = broadcast.updateParamValue('popover='+popover, hash);
-        } else if (hash && hash != '#') {
-            var newHash = hash + '&popover=' + popover
+            $location.search('popover', '');
         } else {
-            var newHash = '#popover='+popover;
+            $location.search('popover', popover);
         }
 
-        // never use an empty hash, as that might reload the page
-        if ('' == newHash) {
-            newHash = '#';
-        }
-
-        broadcast.forceReload = false;
-        angular.element(document).injector().invoke(function (historyService) {
-            historyService.load(newHash);
-        });
+        setTimeout(function () {
+            angular.element(document).injector().get('$rootScope').$apply();
+        }, 1);
     },
 
     /**

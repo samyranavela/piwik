@@ -14,7 +14,7 @@ use Piwik\Db;
 use Piwik\Piwik;
 use Piwik\Plugin\Report;
 use Piwik\Tracker\GoalManager;
-use Piwik\Translate;
+use Piwik\Widget\SubCategory;
 
 /**
  *
@@ -98,10 +98,33 @@ class Goals extends \Piwik\Plugin
             'SitesManager.deleteSite.end'            => 'deleteSiteGoals',
             'Goals.getReportsWithGoalMetrics'        => 'getActualReportsWithGoalMetrics',
             'Translate.getClientSideTranslationKeys' => 'getClientSideTranslationKeys',
-            'Metrics.getDefaultMetricTranslations'   => 'addMetricTranslations'
+            'Metrics.getDefaultMetricTranslations'   => 'addMetricTranslations',
+            'SubCategory.addSubCategories' => 'addSubCategories'
         );
         return $hooks;
     }
+
+    public function addSubCategories(&$subcategories)
+    {
+        $idSite = Common::getRequestVar('idSite', 0, 'int');
+
+        if (!$idSite) {
+            return;
+        }
+
+        $goals = API::getInstance()->getGoals($idSite);
+
+        $order = 0;
+        foreach ($goals as $goal) {
+            $config = new SubCategory();
+            $config->setName($goal['name']);
+            $config->setCategory('Goals_Goals');
+            $config->setId($goal['idgoal']);
+            $config->setOrder($order++);
+            $subcategories[] = $config;
+        }
+    }
+
 
     public function addMetricTranslations(&$translations)
     {
@@ -179,7 +202,7 @@ class Goals extends \Piwik\Plugin
         foreach (Report::getAllReports() as $report) {
             if ($report->hasGoalMetrics()) {
                 $reportsWithGoals[] = array(
-                    'category' => $report->getCategoryKey(),
+                    'category' => $report->getCategory(),
                     'name'     => $report->getName(),
                     'module'   => $report->getModule(),
                     'action'   => $report->getAction(),
@@ -271,5 +294,6 @@ class Goals extends \Piwik\Plugin
         $translationKeys[] = 'Goals_DeleteGoalConfirm';
         $translationKeys[] = 'Goals_Ecommerce';
         $translationKeys[] = 'Goals_Optional';
+        $translationKeys[] = 'Goals_ChooseGoal';
     }
 }

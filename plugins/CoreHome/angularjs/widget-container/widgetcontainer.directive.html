@@ -1,0 +1,8 @@
+<div>
+    <div ng-repeat="widget in container.widgets">
+        <h2 ng-if="widget.name" ng-bind-html="widget.name"></h2>
+
+        <div ng-if="widget.widget_url"
+             piwik-widget-loader="widget.widget_url"></div>
+    </div>
+</div>

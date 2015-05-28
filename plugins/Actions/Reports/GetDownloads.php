@@ -26,8 +26,7 @@ class GetDownloads extends Base
         $this->actionToLoadSubTables = $this->action;
         $this->order = 9;
 
-        $this->menuTitle    = 'General_Downloads';
-        $this->widgetTitle  = 'General_Downloads';
+        $this->subCategory = 'General_Downloads';
     }
 
     public function getMetrics()

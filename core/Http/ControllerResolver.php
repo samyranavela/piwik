@@ -12,7 +12,8 @@ use DI\FactoryInterface;
 use Exception;
 use Piwik\Plugin\Controller;
 use Piwik\Plugin\Report;
-use Piwik\Plugin\Widgets;
+use Piwik\Widget\Widget;
+use Piwik\Session;
 
 /**
  * Resolves the controller that will handle the request.
@@ -55,11 +56,6 @@ class ControllerResolver
             return $controller;
         }
 
-        $controller = $this->createReportMenuController($module, $action, $parameters);
-        if ($controller) {
-            return $controller;
-        }
-
         throw new Exception(sprintf("Action '%s' not found in the module '%s'", $action, $module));
     }
 
@@ -84,14 +80,13 @@ class ControllerResolver
 
     private function createWidgetController($module, $action, array &$parameters)
     {
-        $widget = Widgets::factory($module, $action);
+        $widget = Widget::factory($module, $action);
 
         if (!$widget) {
-            return null;
+            return;
         }
 
         $parameters['widget'] = $widget;
-        $parameters['method'] = $action;
 
         return array($this->createCoreHomeController(), 'renderWidget');
     }
@@ -107,31 +102,6 @@ class ControllerResolver
         $parameters['report'] = $report;
 
         return array($this->createCoreHomeController(), 'renderReportWidget');
-    }
-
-    private function createReportMenuController($module, $action, array &$parameters)
-    {
-        if (!$this->isReportMenuAction($action)) {
-            return null;
-        }
-
-        $action = lcfirst(substr($action, 4)); // menuGetPageUrls => getPageUrls
-        $report = Report::factory($module, $action);
-
-        if (!$report) {
-            return null;
-        }
-
-        $parameters['report'] = $report;
-
-        return array($this->createCoreHomeController(), 'renderReportMenu');
-    }
-
-    private function isReportMenuAction($action)
-    {
-        $startsWithMenu = (Report::PREFIX_ACTION_IN_MENU === substr($action, 0, strlen(Report::PREFIX_ACTION_IN_MENU)));
-
-        return !empty($action) && $startsWithMenu;
     }
 
     private function createCoreHomeController()

@@ -13,10 +13,10 @@ use Piwik\API\Request;
 use Piwik\Common;
 use Piwik\Date;
 use Piwik\FrontController;
-use Piwik\Menu\MenuReporting;
 use Piwik\Notification\Manager as NotificationManager;
 use Piwik\Piwik;
 use Piwik\Plugin\Report;
+use Piwik\Widget\Widget;
 use Piwik\Plugins\CoreHome\DataTableRowAction\MultiRowEvolution;
 use Piwik\Plugins\CoreHome\DataTableRowAction\RowEvolution;
 use Piwik\Plugins\CorePluginsAdmin\MarketplaceApiClient;
@@ -28,7 +28,8 @@ use Piwik\UpdateCheck;
 use Piwik\Url;
 use Piwik\View;
 use Piwik\ViewDataTable\Manager as ViewDataTableManager;
-use Piwik\Plugin\Widgets as PluginWidgets;
+use Piwik\Widget\WidgetContainerConfig;
+use Piwik\Widget\WidgetsList;
 
 class Controller extends \Piwik\Plugin\Controller
 {
@@ -49,25 +50,6 @@ class Controller extends \Piwik\Plugin\Controller
         return 'redirectToCoreHomeIndex';
     }
 
-    public function renderReportMenu(Report $report)
-    {
-        Piwik::checkUserHasSomeViewAccess();
-        $this->checkSitePermission();
-
-        $report->checkIsEnabled();
-
-        $menuTitle = $report->getMenuTitle();
-
-        if (empty($menuTitle)) {
-            throw new Exception('This report is not supposed to be displayed in the menu, please define a $menuTitle in your report.');
-        }
-
-        $menuTitle = $this->translator->translate($menuTitle);
-        $content   = $this->renderReportWidget($report);
-
-        return View::singleReport($menuTitle, $content);
-    }
-
     public function renderReportWidget(Report $report)
     {
         Piwik::checkUserHasSomeViewAccess();
@@ -78,11 +60,63 @@ class Controller extends \Piwik\Plugin\Controller
         return $report->render();
     }
 
-    public function renderWidget(PluginWidgets $widget, $method)
+    public function renderReportWidgetContainer()
+    {
+        Piwik::checkUserHasSomeViewAccess();
+        $this->checkSitePermission();
+
+        $containerId = Common::getRequestVar('containerId', null, 'string');
+
+        $view = new View('@CoreHome/widgetContainer');
+
+        $widgets = array();
+
+        $widgetsList = WidgetsList::get();
+        foreach ($widgetsList->getWidgets() as $container) {
+            if ($container instanceof WidgetContainerConfig
+                && $container->getId() === $containerId
+                && $container->isWidgetizeable()) {
+
+                $container->checkIsEnabled();
+
+                foreach ($container->getWidgetConfigs() as $config) {
+                    $defaultParams = array(
+                        'module' => $config->getModule(),
+                        'action' => $config->getAction(),
+                        'idSite' => Common::getRequestVar('idSite', null, 'int'),
+                        'period' => Common::getRequestVar('period', null, 'string'),
+                        'date' => Common::getRequestVar('date', null, 'string'),
+                    );
+                    $params = $defaultParams + $config->getParameters();
+                    $oldGet = $_GET;
+
+                    $_GET = $oldGet + $params;
+
+                    //$content = FrontController::getInstance()->dispatch($config->getModule(), $config->getAction());
+                    $widgets[] = array('content' => '', 'name' => $config->getName());
+
+                    $_GET = $oldGet;
+                }
+
+                break;
+            }
+        }
+
+        $view->widgets = $widgets;
+
+        return $view->render();
+    }
+
+    /**
+     * @param Widget $widget
+     * @return mixed
+     * @throws Exception
+     */
+    public function renderWidget($widget)
     {
         Piwik::checkUserHasSomeViewAccess();
 
-        return $widget->$method();
+        return $widget->render();
     }
 
     function redirectToCoreHomeIndex()
@@ -130,7 +164,6 @@ class Controller extends \Piwik\Plugin\Controller
     {
         $view = new View('@CoreHome/getDefaultIndexView');
         $this->setGeneralVariablesView($view);
-        $view->menu = MenuReporting::getInstance()->getMenu();
         $view->dashboardSettingsControl = new DashboardManagerControl();
         $view->content = '';
         return $view;
