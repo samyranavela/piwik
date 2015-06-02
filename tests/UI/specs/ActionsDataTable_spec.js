@@ -30,13 +30,6 @@ describe("ActionsDataTable", function () {
             page.click('tr.subDataTable:eq(2)');
         }, done);
     });
-    
-    it("should automatically expand subtables if it contains only one folder", function (done) {
-        expect.screenshot('auto_expand').to.be.capture(function (page) {
-            page.click('tr .value:contains("blog")');
-            page.click('tr .value:contains("2012")');
-        }, done);
-    });
 
     it("should flatten table when flatten link clicked", function (done) {
         expect.screenshot('flattened').to.be.capture(function (page) {
@@ -96,6 +89,14 @@ describe("ActionsDataTable", function () {
         expect.screenshot('search').to.be.capture(function (page) {
             page.sendKeys('.dataTableSearchPattern>input[type=text]', 'i');
             page.click('.dataTableSearchPattern>input[type=submit]');
+        }, done);
+    });
+    
+    it("should automatically expand subtables if it contains only one folder", function (done) {
+        expect.screenshot('auto_expand').to.be.capture(function (page) {
+            page.load(url);
+            page.click('tr .value:contains("blog")');
+            page.click('tr .value:contains("2012")');
         }, done);
     });
 });
