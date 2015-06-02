@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<result>
+	<row>
+		<id>website</id>
+		<name>Website</name>
+		<description>A website or a mobile web app that is usually consumed via a browser</description>
+		<howToSetupUrl>?module=CoreAdminHome&amp;action=trackingCodeGenerator</howToSetupUrl>
+	</row>
+</result>

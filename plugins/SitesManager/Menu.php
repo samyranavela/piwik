@@ -10,15 +10,41 @@ namespace Piwik\Plugins\SitesManager;
 
 use Piwik\Menu\MenuAdmin;
 use Piwik\Piwik;
+use Piwik\Type\Type;
 
 class Menu extends \Piwik\Plugin\Menu
 {
     public function configureAdminMenu(MenuAdmin $menu)
     {
         if (Piwik::isUserHasSomeAdminAccess()) {
-            $menu->addManageItem('SitesManager_Sites',
+            $type = $this->getFirstTypeIfOnlyOneIsInUse();
+
+            $menuName = 'General_Properties';
+            if ($type) {
+                $menuName = $type->getNamePlural();
+            }
+
+            $menu->addManageItem($menuName,
                                  $this->urlForAction('index'),
                                  $order = 1);
+        }
+    }
+
+    private function getFirstTypeIfOnlyOneIsInUse()
+    {
+        $types = Type::getAllTypes();
+
+        if (count($types) === 1) {
+            // only one type is in use, use this one for the wording
+            return reset($types);
+        } else {
+            // multiple types are activated, check whether only one is actually in use
+            $model   = new Model();
+            $typeIds = $model->getUsedTypeIds();
+
+            if (count($typeIds) === 1) {
+                return Type::getType(reset($typeIds));
+            }
         }
     }
 }

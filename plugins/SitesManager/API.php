@@ -18,6 +18,7 @@ use Piwik\Metrics\Formatter;
 use Piwik\Network\IPUtils;
 use Piwik\Option;
 use Piwik\Piwik;
+use Piwik\Property\PropertySettings;
 use Piwik\ProxyHttp;
 use Piwik\Scheduler\Scheduler;
 use Piwik\SettingsPiwik;
@@ -25,6 +26,7 @@ use Piwik\SettingsServer;
 use Piwik\Site;
 use Piwik\Tracker;
 use Piwik\Tracker\Cache;
+use Piwik\Type\Type;
 use Piwik\Url;
 use Piwik\UrlHelper;
 
@@ -487,6 +489,7 @@ class API extends \Piwik\Plugin\API
      * @param null|string $excludedUserAgents
      * @param int $keepURLFragments If 1, URL fragments will be kept when tracking. If 2, they
      *                              will be removed. If 0, the default global behavior will be used.
+     * @param array|null $settings JSON serialized settings eg {settingName: settingValue, ...}
      * @see getKeepURLFragmentsGlobal.
      * @param string $type The website type, defaults to "website" if not set.
      *
@@ -506,7 +509,8 @@ class API extends \Piwik\Plugin\API
                             $startDate = null,
                             $excludedUserAgents = null,
                             $keepURLFragments = null,
-                            $type = null)
+                            $type = null,
+                            $settings = null)
     {
         Piwik::checkUserHasSuperUserAccess();
 
@@ -535,9 +539,7 @@ class API extends \Piwik\Plugin\API
         $urls = array_slice($urls, 1);
 
         $bind = array('name'     => $siteName,
-                      'main_url' => $url,
-
-        );
+                      'main_url' => $url);
 
         $bind['excluded_ips'] = $this->checkAndReturnExcludedIps($excludedIps);
         $bind['excluded_parameters']  = $this->checkAndReturnCommaSeparatedStringList($excludedQueryParameters);
@@ -564,12 +566,21 @@ class API extends \Piwik\Plugin\API
             $bind['group'] = "";
         }
 
+        if (!empty($settings)) {
+            $this->validatePropertySettings($bind['type'], $settings);
+        }
+
         $idSite = $this->getModel()->createSite($bind);
 
         $this->insertSiteUrls($idSite, $urls);
 
         // we reload the access list which doesn't yet take in consideration this new website
         Access::getInstance()->reloadAccess();
+
+        if (!empty($settings)) {
+            $this->updatePropertySettings($idSite, $settings);
+        }
+
         $this->postUpdateWebsite($idSite);
 
         /**
@@ -580,6 +591,36 @@ class API extends \Piwik\Plugin\API
         Piwik::postEvent('SitesManager.addSite.end', array($idSite));
 
         return (int) $idSite;
+    }
+
+    private function validatePropertySettings($idType, $settings)
+    {
+        $propertySettings = new PropertySettings(0, $idType);
+
+        foreach ($propertySettings->getSettingsForCurrentUser() as $propertySetting) {
+            $name = $propertySetting->getName();
+            if (!empty($settings[$name])) {
+                $propertySetting->setValue($settings[$name]);
+            }
+        }
+    }
+
+    private function updatePropertySettings($idSite, $settings)
+    {
+        $idType = Site::getTypeFor($idSite);
+
+        $propertySettings = new PropertySettings($idSite, $idType);
+
+        foreach ($propertySettings->getSettingsForCurrentUser() as $propertySetting) {
+            $name = $propertySetting->getName();
+            if (!empty($settings[$name])) {
+                $propertySetting->setValue($settings[$name]);
+            }
+            // we do not clear existing settings if the value is missing.
+            // There can be so many settings added by random plugins one would always clear some settings.
+        }
+
+        $propertySettings->save();
     }
 
     private function postUpdateWebsite($idSite)
@@ -1031,6 +1072,7 @@ class API extends \Piwik\Plugin\API
      * @param int|null $keepURLFragments If 1, URL fragments will be kept when tracking. If 2, they
      *                                   will be removed. If 0, the default global behavior will be used.
      * @param string $type The Website type, default value is "website"
+     * @param array|null $settings JSON serialized settings eg {settingName: settingValue, ...}
      * @throws Exception
      * @see getKeepURLFragmentsGlobal. If null, the existing value will
      *                                   not be modified.
@@ -1052,7 +1094,8 @@ class API extends \Piwik\Plugin\API
                                $startDate = null,
                                $excludedUserAgents = null,
                                $keepURLFragments = null,
-                               $type = null)
+                               $type = null,
+                               $settings = null)
     {
         Piwik::checkUserHasAdminAccess($idSite);
 
@@ -1114,9 +1157,20 @@ class API extends \Piwik\Plugin\API
         list($searchKeywordParameters, $searchCategoryParameters) = $this->checkSiteSearchParameters($searchKeywordParameters, $searchCategoryParameters);
         $bind['sitesearch_keyword_parameters'] = $searchKeywordParameters;
         $bind['sitesearch_category_parameters'] = $searchCategoryParameters;
-        $bind['type'] = $this->checkAndReturnType($type);
+
+        if (!is_null($type)) {
+            $bind['type'] = $this->checkAndReturnType($type);
+        }
+
+        if (!empty($settings)) {
+            $this->validatePropertySettings(Site::getTypeFor($idSite), $settings);
+        }
 
         $this->getModel()->updateSite($bind, $idSite);
+
+        if (!empty($settings)) {
+            $this->updatePropertySettings($idSite, $settings);
+        }
 
         // we now update the main + alias URLs
         $this->getModel()->deleteSiteAliasUrls($idSite);

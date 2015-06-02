@@ -327,6 +327,8 @@
         "Price": "Price",
         "ProductConversionRate": "Product Conversion Rate",
         "ProductRevenue": "Product Revenue",
+        "Property": "Property",
+        "Properties": "Properties",
         "PurchasedProducts": "Purchased Products",
         "Quantity": "Quantity",
         "RangeReports": "Custom date ranges",

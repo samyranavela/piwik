@@ -12,6 +12,8 @@ use Exception;
 use Piwik\API\ResponseBuilder;
 use Piwik\Common;
 use Piwik\Piwik;
+use Piwik\Property\PropertySetting;
+use Piwik\Property\PropertySettings;
 use Piwik\SettingsPiwik;
 use Piwik\Site;
 use Piwik\Tracker\TrackerCodeGenerator;
@@ -33,8 +35,29 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         return $this->renderTemplate('index');
     }
 
-    public function getGlobalSettings() {
+    public function getCustomTypeSettings()
+    {
+        $idSite = Common::getRequestVar('idSite', 0, 'int');
+        $idType = Common::getRequestVar('idType', '', 'string');
 
+        if ($idSite >= 1) {
+            Piwik::checkUserHasAdminAccess($idSite);
+        } else if ($idSite === 0) {
+            Piwik::checkUserHasSomeAdminAccess();
+        } else {
+            throw new Exception('Invalid idSite parameter. IdSite has to be zero or higher');
+        }
+
+        $view = new View('@SitesManager/custom_type_settings');
+
+        $propSettings   = new PropertySettings($idSite, $idType);
+        $view->settings = $propSettings->getSettingsForCurrentUser();
+
+        return $view->render();
+    }
+
+    public function getGlobalSettings()
+    {
         Piwik::checkUserHasSomeViewAccess();
 
         $response = new ResponseBuilder(Common::getRequestVar('format'));
