@@ -96,7 +96,7 @@
 
         openSubtableFromLevel0IfOnlyOneSubtableGiven: function (domElem) {
             var $subtables = domElem.find('.subDataTable');
-            var hasOnlyOneRow = domElem.find('tr[id]').length === 1;
+            var hasOnlyOneRow = domElem.find('tbody tr.level0').length === 1;
             var hasOnlyOneSubtable = $subtables.length === 1;
 
             if (hasOnlyOneRow && hasOnlyOneSubtable) {
