@@ -322,8 +322,6 @@ class Fixture extends \PHPUnit_Framework_Assert
         }
 
         $this->clearInMemoryCaches();
-
-        Log::unsetInstance();
     }
 
     public function clearInMemoryCaches()

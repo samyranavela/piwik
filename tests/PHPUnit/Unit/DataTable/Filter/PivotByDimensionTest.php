@@ -41,30 +41,7 @@ class PivotByDimensionTest extends UnitTestCase
     {
         parent::setUp();
 
-        $self = $this;
-
-        $proxyMock = $this->getMock('stdClass', array('call'));
-        $proxyMock->expects($this->any())->method('call')->willReturnCallback(function ($className, $methodName, $parameters) use ($self) {
-            if ($className == "\\Piwik\\Plugins\\UserCountry\\API"
-                && $methodName == 'getCity'
-            ) {
-                $self->segmentUsedToGetIntersected[] = $parameters['segment'];
-
-                return $self->getSegmentTable();
-            } else {
-                throw new Exception("Unknown API request: $className::$methodName.");
-            }
-        });
-        Proxy::setSingletonInstance($proxyMock);
-
         $this->segmentTableCount = 0;
-    }
-
-    public function tearDown()
-    {
-        Proxy::unsetInstance();
-
-        parent::tearDown();
     }
 
     /**
@@ -389,5 +366,27 @@ class PivotByDimensionTest extends UnitTestCase
     private function loadPlugins()
     {
         PluginManager::getInstance()->loadPlugins(func_get_args());
+    }
+
+    protected function provideContainerConfig()
+    {
+        $self = $this;
+
+        $proxyMock = $this->getMock('Piwik\API\Proxy', array('call'));
+        $proxyMock->expects($this->any())->method('call')->willReturnCallback(function ($className, $methodName, $parameters) use ($self) {
+            if ($className == "\\Piwik\\Plugins\\UserCountry\\API"
+                && $methodName == 'getCity'
+            ) {
+                $self->segmentUsedToGetIntersected[] = $parameters['segment'];
+
+                return $self->getSegmentTable();
+            } else {
+                throw new Exception("Unknown API request: $className::$methodName.");
+            }
+        });
+
+        return array(
+            'Piwik\API\Proxy' => $proxyMock
+        );
     }
 }
