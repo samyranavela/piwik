@@ -121,7 +121,7 @@ class AssetManagerTest extends UnitTestCase
 
     private function setUpAssetManager()
     {
-        $this->assetManager = new AssetManager();
+        $this->assetManager = new AssetManager(new AssetManager\UIAssetMinifier(), $this->cacheBuster);
 
         $this->assetManager->removeMergedAssets();
 
