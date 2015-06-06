@@ -9,6 +9,7 @@
 namespace Piwik\Plugins\Ecommerce;
 
 use Exception;
+use Piwik\API\Proxy;
 use Piwik\DataTable;
 use Piwik\FrontController;
 use Piwik\Piwik;
@@ -22,11 +23,11 @@ class Controller extends \Piwik\Plugins\Goals\Controller
      */
     private $translator;
 
-    public function __construct(FrontController $frontController, Translator $translator)
+    public function __construct(FrontController $frontController, Proxy $apiProxy, Translator $translator)
     {
         $this->translator = $translator;
 
-        parent::__construct($frontController, $translator);
+        parent::__construct($frontController, $apiProxy, $translator);
     }
 
     public function ecommerceReport()

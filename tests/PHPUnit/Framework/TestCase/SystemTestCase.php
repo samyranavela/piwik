@@ -472,7 +472,7 @@ abstract class SystemTestCase extends PHPUnit_Framework_TestCase
 
     protected function getTestRequestsCollection($api, $testConfig, $api)
     {
-       return new Collection($api, $testConfig, $api);
+       return new Collection($api, $testConfig, $api, self::$fixture->piwikEnvironment);
     }
 
     private function printComparisonFailures()

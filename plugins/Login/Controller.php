@@ -10,6 +10,7 @@ namespace Piwik\Plugins\Login;
 
 use Exception;
 use Piwik\Access;
+use Piwik\API\Proxy;
 use Piwik\Auth as AuthInterface;
 use Piwik\Common;
 use Piwik\Config;
@@ -48,10 +49,10 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Constructor.
 \     */
-    public function __construct(FrontController $frontController, PasswordResetter $passwordResetter, Auth $auth,
-                                SessionInitializer $sessionInitializer)
+    public function __construct(FrontController $frontController, Proxy $apiProxy, PasswordResetter $passwordResetter,
+                                Auth $auth, SessionInitializer $sessionInitializer)
     {
-        parent::__construct($frontController);
+        parent::__construct($frontController, $apiProxy);
 
         $this->passwordResetter = $passwordResetter;
         $this->auth = $auth;
