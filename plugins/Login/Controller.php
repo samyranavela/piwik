@@ -15,6 +15,7 @@ use Piwik\Common;
 use Piwik\Config;
 use Piwik\Container\StaticContainer;
 use Piwik\Cookie;
+use Piwik\FrontController;
 use Piwik\Log;
 use Piwik\Nonce;
 use Piwik\Piwik;
@@ -51,9 +52,9 @@ class Controller extends \Piwik\Plugin\Controller
      * @param AuthInterface $auth
      * @param SessionInitializer $authenticatedSessionFactory
 \     */
-    public function __construct($passwordResetter = null, $auth = null, $sessionInitializer = null)
+    public function __construct(FrontController $frontController, $passwordResetter = null, $auth = null, $sessionInitializer = null)
     {
-        parent::__construct();
+        parent::__construct($frontController);
 
         if (empty($passwordResetter)) {
             $passwordResetter = new PasswordResetter();

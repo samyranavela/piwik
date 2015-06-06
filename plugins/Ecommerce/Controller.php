@@ -22,11 +22,11 @@ class Controller extends \Piwik\Plugins\Goals\Controller
      */
     private $translator;
 
-    public function __construct(Translator $translator)
+    public function __construct(FrontController $frontController, Translator $translator)
     {
         $this->translator = $translator;
 
-        parent::__construct($translator);
+        parent::__construct($frontController, $translator);
     }
 
     public function ecommerceReport()
@@ -57,7 +57,7 @@ class Controller extends \Piwik\Plugins\Goals\Controller
         $saveGET = $_GET;
         $_GET['segment'] = urlencode('visitEcommerceStatus!=none');
         $_GET['widget'] = 1;
-        $output = FrontController::getInstance()->dispatch('Live', 'getVisitorLog', array($fetch));
+        $output = $this->frontController->dispatch('Live', 'getVisitorLog', array($fetch));
         $_GET   = $saveGET;
 
         return $output;

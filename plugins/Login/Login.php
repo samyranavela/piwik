@@ -55,7 +55,9 @@ class Login extends \Piwik\Plugin
     {
         $exceptionMessage = $exception->getMessage();
 
-        echo FrontController::getInstance()->dispatch('Login', 'login', array($exceptionMessage));
+        /** @var FrontController $frontController */
+        $frontController = StaticContainer::get('Piwik\FrontController');
+        echo $frontController->dispatch('Login', 'login', array($exceptionMessage));
     }
 
     /**

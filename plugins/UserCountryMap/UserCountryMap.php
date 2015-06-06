@@ -8,6 +8,7 @@
  */
 namespace Piwik\Plugins\UserCountryMap;
 
+use Piwik\Container\StaticContainer;
 use Piwik\FrontController;
 use Piwik\Piwik;
 use Piwik\Version;
@@ -40,8 +41,11 @@ class UserCountryMap extends \Piwik\Plugin
 
     public static function insertMapInLocationReport(&$out)
     {
+        /** @var FrontController $frontController */
+        $frontController = StaticContainer::get('Piwik\FrontController');
+
         $out = '<h2>' . Piwik::translate('UserCountryMap_VisitorMap') . '</h2>';
-        $out .= FrontController::getInstance()->fetchDispatch('UserCountryMap', 'visitorMap');
+        $out .= $frontController->fetchDispatch('UserCountryMap', 'visitorMap');
     }
 
     public function getListHooksRegistered()

@@ -7,6 +7,8 @@
  *
  */
 namespace Piwik\Plugins\UserLanguage;
+
+use Piwik\Container\StaticContainer;
 use Piwik\Piwik;
 use Piwik\FrontController;
 
@@ -22,8 +24,11 @@ class UserLanguage extends \Piwik\Plugin
 
     public static function footerUserCountry(&$out)
     {
+        /** @var FrontController $frontController */
+        $frontController = StaticContainer::get('Piwik\FrontController');
+
         $out .= '<div><h2>' . Piwik::translate('UserLanguage_BrowserLanguage') . '</h2>';
-        $out .= FrontController::getInstance()->fetchDispatch('UserLanguage', 'getLanguage');
+        $frontController->fetchDispatch('UserLanguage', 'getLanguage');
         $out .= '</div>';
     }
 }

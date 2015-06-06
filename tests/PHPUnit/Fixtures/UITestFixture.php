@@ -249,6 +249,9 @@ class UITestFixture extends SqlDump
             }
         }
 
+        /** @var FrontController $frontController */
+        $frontController = $this->piwikEnvironment->getContainer()->get('Piwik\FrontController');
+
         foreach ($dashboards as $id => $layout) {
             if ($id == 0) {
                 $_GET['name'] = self::makeXssContent('dashboard name' . $id);
@@ -257,7 +260,7 @@ class UITestFixture extends SqlDump
             }
             $_GET['layout'] = json_encode($layout);
             $_GET['idDashboard'] = $id + 1;
-            FrontController::getInstance()->fetchDispatch('Dashboard', 'saveLayout');
+            $frontController->fetchDispatch('Dashboard', 'saveLayout');
         }
 
         // create empty dashboard
@@ -280,7 +283,7 @@ class UITestFixture extends SqlDump
         $_GET['layout'] = json_encode($dashboard);
         $_GET['idDashboard'] = 5;
         $_GET['idSite'] = 2;
-        FrontController::getInstance()->fetchDispatch('Dashboard', 'saveLayout');
+        $frontController->fetchDispatch('Dashboard', 'saveLayout');
 
         $_GET = $oldGet;
     }
