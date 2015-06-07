@@ -13,11 +13,12 @@ use Piwik\Piwik;
 use Piwik\Metrics;
 use Piwik\Menu\MenuReporting;
 use Piwik\Plugin\Manager as PluginManager;
+use Piwik\Tests\Framework\TestCase\UnitTestCase;
 
 /**
  * @group Core
  */
-class ReportingTest extends \PHPUnit_Framework_TestCase
+class ReportingTest extends UnitTestCase
 {
     /**
      * @var MenuReporting
@@ -26,8 +27,8 @@ class ReportingTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        PluginManager::getInstance()->unloadPlugins();
-        $this->menu = MenuReporting::getInstance();
+        parent::setUp();
+        $this->menu = $this->environment->getContainer()->get('Piwik\Menu\MenuReporting');
     }
 
     public function test_getMenu_shouldBeNull_IfNoItems()
