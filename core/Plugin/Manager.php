@@ -497,7 +497,9 @@ class Manager
         $this->installPluginIfNecessary($plugin);
         $plugin->activate();
 
-        EventDispatcher::getInstance()->postPendingEventsTo($plugin);
+        /** @var EventDispatcher $eventDispatcher */
+        $eventDispatcher = StaticContainer::get('Piwik\EventDispatcher');
+        $eventDispatcher->postPendingEventsTo($plugin);
 
         $this->pluginsToLoad[] = $pluginName;
 
@@ -861,9 +863,12 @@ class Manager
             }
         }
 
+        /** @var EventDispatcher $eventDispatcher */
+        $eventDispatcher = StaticContainer::get('Piwik\EventDispatcher');
+
         // post pending events after all plugins are successfully loaded
         foreach ($pluginsToPostPendingEventsTo as $plugin) {
-            EventDispatcher::getInstance()->postPendingEventsTo($plugin);
+            $eventDispatcher->postPendingEventsTo($plugin);
         }
     }
 

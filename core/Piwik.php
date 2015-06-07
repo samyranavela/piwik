@@ -9,7 +9,9 @@
 namespace Piwik;
 
 use Exception;
-use Piwik\Container\StaticContainer;use Piwik\Plugins\UsersManager\API as APIUsersManager;use Piwik\Translation\Translator;
+use Piwik\Container\StaticContainer;
+use Piwik\Plugins\UsersManager\API as APIUsersManager;
+use Piwik\Translation\Translator;
 
 /**
  * @see core/Translate.php
@@ -687,7 +689,9 @@ class Piwik
      */
     public static function postEvent($eventName, $params = array(), $pending = false, $plugins = null)
     {
-        EventDispatcher::getInstance()->postEvent($eventName, $params, $pending, $plugins);
+        /** @var EventDispatcher $eventDispatcher */
+        $eventDispatcher = StaticContainer::get('Piwik\EventDispatcher');
+        $eventDispatcher->postEvent($eventName, $params, $pending, $plugins);
     }
 
     /**
@@ -702,7 +706,9 @@ class Piwik
      */
     public static function addAction($eventName, $function)
     {
-        EventDispatcher::getInstance()->addObserver($eventName, $function);
+        /** @var EventDispatcher $eventDispatcher */
+        $eventDispatcher = StaticContainer::get('Piwik\EventDispatcher');
+        $eventDispatcher->addObserver($eventName, $function);
     }
 
     /**
