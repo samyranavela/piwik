@@ -14,6 +14,7 @@ use Piwik\DataAccess\ArchiveTableCreator;
 use Piwik\DataTable\Manager;
 use Piwik\Date;
 use Piwik\Db;
+use Piwik\EventDispatcher;
 use Piwik\Option;
 use Piwik\Plugins\Goals\API as APIGoals;
 use Piwik\Plugins\Goals\Archiver;
@@ -482,7 +483,9 @@ class PrivacyManagerTest extends IntegrationTestCase
      */
     public function testPurgeLogDataConcurrency()
     {
-        \Piwik\Piwik::addAction("LogDataPurger.ActionsToKeepInserted.olderThan", array($this, 'addReferenceToUnusedAction'));
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = self::$fixture->piwikEnvironment->getContainer()->get('Piwik\EventDispatcher');
+        $eventObserver->addObserver("LogDataPurger.ActionsToKeepInserted.olderThan", array($this, 'addReferenceToUnusedAction'));
 
         $purger = new LogDataPurger(new DimensionMetadataProvider());
 

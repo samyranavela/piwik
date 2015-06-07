@@ -17,12 +17,7 @@ use Piwik\FrontController;
  */
 class UserLanguage extends \Piwik\Plugin
 {
-    public function postLoad()
-    {
-        Piwik::addAction('Template.footerUserCountry', array('Piwik\Plugins\UserLanguage\UserLanguage', 'footerUserCountry'));
-    }
-
-    public static function footerUserCountry(&$out)
+    public function footerUserCountry(&$out)
     {
         /** @var FrontController $frontController */
         $frontController = StaticContainer::get('Piwik\FrontController');
@@ -30,5 +25,12 @@ class UserLanguage extends \Piwik\Plugin
         $out .= '<div><h2>' . Piwik::translate('UserLanguage_BrowserLanguage') . '</h2>';
         $frontController->fetchDispatch('UserLanguage', 'getLanguage');
         $out .= '</div>';
+    }
+
+    public function getListHooksRegistered()
+    {
+        return array(
+            'Template.footerUserCountry' => 'footerUserCountry',
+        );
     }
 }

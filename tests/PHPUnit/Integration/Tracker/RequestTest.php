@@ -8,6 +8,7 @@
 
 namespace Piwik\Tests\Integration\Tracker;
 
+use Piwik\EventDispatcher;
 use Piwik\Piwik;
 use Piwik\Plugins\CustomVariables\CustomVariables;
 use Piwik\Plugins\UsersManager\API;
@@ -245,8 +246,11 @@ class RequestTest extends IntegrationTestCase
 
     public function test_authenticateSuperUserOrAdmin_ShouldPostAuthInitEvent_IfTokenIsGiven()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = self::$fixture->piwikEnvironment->getContainer()->get('Piwik\EventDispatcher');
+
         $called = 0;
-        Piwik::addAction('Request.initAuthenticationObject', function () use (&$called) {
+        $eventObserver->addObserver('Request.initAuthenticationObject', function () use (&$called) {
             $called++;
         });
 

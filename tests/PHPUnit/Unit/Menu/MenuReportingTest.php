@@ -8,6 +8,7 @@
 
 namespace Piwik\Tests\Unit\Menu;
 
+use Piwik\EventDispatcher;
 use Piwik\Plugin\Report;
 use Piwik\Piwik;
 use Piwik\Metrics;
@@ -38,10 +39,13 @@ class ReportingTest extends UnitTestCase
 
     public function test_getMenu_shouldTriggerAddItemsEvent_toBeBackwardsCompatible()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = $this->environment->getContainer()->get('Piwik\EventDispatcher');
+
         $this->loadSomePlugins();
 
         $triggered = false;
-        Piwik::addAction('Menu.Reporting.addItems', function () use (&$triggered) {
+        $eventObserver->addObserver('Menu.Reporting.addItems', function () use (&$triggered) {
             $triggered = true;
         });
 

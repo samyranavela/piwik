@@ -149,8 +149,11 @@ class TrackerTest extends UnitTestCase
 
     public function test_main_shouldPostEndEvent()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = $this->environment->getContainer()->get('Piwik\EventDispatcher');
+
         $called = false;
-        Piwik::addAction('Tracker.end', function () use (&$called) {
+        $eventObserver->addObserver('Tracker.end', function () use (&$called) {
             $called = true;
         });
 
@@ -161,8 +164,11 @@ class TrackerTest extends UnitTestCase
 
     public function test_main_shouldPostEndEvent_EvenIfShouldNotRecordStats()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = $this->environment->getContainer()->get('Piwik\EventDispatcher');
+
         $called = false;
-        Piwik::addAction('Tracker.end', function () use (&$called) {
+        $eventObserver->addObserver('Tracker.end', function () use (&$called) {
             $called = true;
         });
 
@@ -175,8 +181,11 @@ class TrackerTest extends UnitTestCase
 
     public function test_main_shouldPostEndEvent_EvenIfThereIsAnException()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = $this->environment->getContainer()->get('Piwik\EventDispatcher');
+
         $called = false;
-        Piwik::addAction('Tracker.end', function () use (&$called) {
+        $eventObserver->addObserver('Tracker.end', function () use (&$called) {
             $called = true;
         });
 

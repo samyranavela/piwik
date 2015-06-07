@@ -34,12 +34,7 @@ class UserCountryMap extends \Piwik\Plugin
         );
     }
 
-    public function postLoad()
-    {
-        Piwik::addAction('Template.leftColumnUserCountry', array('Piwik\Plugins\UserCountryMap\UserCountryMap', 'insertMapInLocationReport'));
-    }
-
-    public static function insertMapInLocationReport(&$out)
+    public function insertMapInLocationReport(&$out)
     {
         /** @var FrontController $frontController */
         $frontController = StaticContainer::get('Piwik\FrontController');
@@ -57,7 +52,8 @@ class UserCountryMap extends \Piwik\Plugin
             'Platform.initialized' => array(
                 'after'    => true,
                 'function' => 'registerWidgets'
-            )
+            ),
+            'Template.leftColumnUserCountry' => 'insertMapInLocationReport',
         );
         return $hooks;
     }

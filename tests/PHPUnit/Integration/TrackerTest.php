@@ -195,8 +195,11 @@ class TrackerTest extends IntegrationTestCase
 
     public function test_trackRequest_shouldNotTrackAnything_IfRequestIsEmpty()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = self::$fixture->piwikEnvironment->getContainer()->get('Piwik\EventDispatcher');
+
         $called = false;
-        Piwik::addAction('Tracker.makeNewVisitObject', function () use (&$called) {
+        $eventObserver->addObserver('Tracker.makeNewVisitObject', function () use (&$called) {
             $called = true;
         });
 
@@ -207,8 +210,11 @@ class TrackerTest extends IntegrationTestCase
 
     public function test_trackRequest_shouldTrack_IfRequestIsNotEmpty()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = self::$fixture->piwikEnvironment->getContainer()->get('Piwik\EventDispatcher');
+
         $called = false;
-        Piwik::addAction('Tracker.makeNewVisitObject', function () use (&$called) {
+        $eventObserver->addObserver('Tracker.makeNewVisitObject', function () use (&$called) {
             $called = true;
         });
 

@@ -9,6 +9,7 @@
 namespace Piwik\Tests\Unit\Tracker;
 
 use Piwik\Cookie;
+use Piwik\EventDispatcher;
 use Piwik\Network\IPUtils;
 use Piwik\Piwik;
 use Piwik\Plugins\CustomVariables\CustomVariables;
@@ -507,8 +508,11 @@ class RequestTest extends UnitTestCase
 
     public function test_getIdSite_shouldTriggerEventAndReturnThatIdSite()
     {
+        /** @var EventDispatcher $eventObserver */
+        $eventObserver = $this->environment->getContainer()->get('Piwik\EventDispatcher');
+
         $self = $this;
-        Piwik::addAction('Tracker.Request.getIdSite', function (&$idSite, $params) use ($self) {
+        $eventObserver->addObserver('Tracker.Request.getIdSite', function (&$idSite, $params) use ($self) {
             $self->assertSame(14, $idSite);
             $self->assertEquals(array('idsite' => '14'), $params);
             $idSite = 12;
