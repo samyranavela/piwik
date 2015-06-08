@@ -144,7 +144,7 @@ describe("Dashboard", function () {
         }, done);
     });
 
-    it.skip("should rename dashboard when dashboard rename process completed", function (done) {
+    it("should rename dashboard when dashboard rename process completed", function (done) {
         expect.screenshot("rename").to.be.capture(function (page) {
             page.click('.dashboard-manager');
             page.click('li[data-action=renameDashboard]');
