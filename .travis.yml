@@ -101,6 +101,9 @@ before_script:
   # add always_populate_raw_post_data=-1 to php.ini
   - echo "always_populate_raw_post_data=-1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
 
+  # disable opcache to avoid random failures on travis
+  - echo "opcache.enable=0" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+
   - ./tests/travis/configure_git.sh
 
   # print out mysql information
@@ -136,7 +139,7 @@ before_script:
   - ./tests/travis/prepare.sh
   - ./tests/travis/setup_webserver.sh
 
-  - export GENERATE_TRAVIS_YML_COMMAND="php ./console generate:travis-yml --core --verbose"
+  - export GENERATE_TRAVIS_YML_COMMAND="php ./console generate:travis-yml --core"
   - ./tests/travis/autoupdate_travis_yml.sh
 
   - cd tests/PHPUnit
