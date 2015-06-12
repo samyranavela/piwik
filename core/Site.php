@@ -12,7 +12,6 @@ namespace Piwik;
 use Exception;
 use Piwik\Exception\UnexpectedWebsiteFoundException;
 use Piwik\Plugins\SitesManager\API;
-use Piwik\Type\TypeSettings;
 
 /**
  * Provides access to individual [site entity](/guides/persistence-and-the-mysql-backend#websites-aka-sites) data
